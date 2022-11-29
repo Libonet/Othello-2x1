@@ -1,5 +1,9 @@
-santiago,B
-PEPE,N
-B
+   santiago ,  B
+PEPE,  N
+ B 
 A1
 B2
+C3
+D4
+
+
