@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <ctype.h>
 
 #define CANT_FILAS 8
 #define CANT_COLUMNAS 8
@@ -30,9 +31,10 @@ int leerNombre(FILE* fp, info_tablero* partida);
 int colorInicial(FILE* fp, info_tablero* partida);
 // analisis de jugadas
 void analizarJugadas(info_tablero* partida, char* destino);
-int validarJugada(info_tablero* partida);
-int validarLinea(info_tablero* partida);
-void realizarJugada(info_tablero* partida);
+int validarJugada(info_tablero* partida, int numero_de_jugada, int* direcciones);
+int validarLinea(info_tablero* partida, int direccion);
+void realizarJugada(info_tablero* partida, int numero_de_jugada, int* direcciones);
+void traducirJugada(char* jugada, int* jugadaTraducida);
 // imprimir
 void mostrarTablero(info_tablero* partida);
 // utilidades
@@ -183,9 +185,75 @@ int colorInicial(FILE* fp, info_tablero* partida){
 // -------------------------------------------------------
 
 void analizarJugadas(info_tablero* partida, char* destino){
-    for(int i=0; i<partida->cant_jugadas; i++){
+    int terminado=FALSE, direcciones[8], jugada_valida=0;
+    // cada posicion en direcciones determina si cierta
+    // direccion debe ser modificada con un 1
+    // direcciones[0] = (-1, -1) = NorOeste; direcciones[5] = (1, -1) = SurOeste
 
+    for(int i=0; i<partida->cant_jugadas && !terminado; i++){
+        jugada_valida = validarJugada(partida, i, &direcciones);
+        if (jugada_valida){
+            realizarJugada(partida, i, &direcciones);
+        }
+        else{
+            terminado=TRUE;
+            if (partida->colorActual=='B'){
+                printf("El jugador %s realizo una jugada invalida\n", partida->jugadorBlanco);
+            }
+            else{
+                printf("El jugador %s realizo una jugada invalida\n", partida->jugadorNegro);
+            }
+            mostrarTablero(partida);
+        }
+        partida->colorActual = (partida->colorActual=='B') ? 'N' : 'B';
     }
+    if (jugada_valida){
+        if (!terminado){
+            exportarPartida(partida, destino);
+        }
+        else{
+            indicarGanador(partida);
+        }
+    }
+}
+
+// -------------------------------------------------------
+
+int validarJugada(info_tablero* partida, int numero_de_jugada, int* direcciones){
+    int jugada[2];
+    traducirJugada(partida->jugadas[numero_de_jugada], jugada);
+
+    if (!jugada_en_rango(jugada)){
+        printf("error: la jugada no esta en el tablero");
+        return FALSE;
+    }
+    if (partida->tablero[jugada[0]][jugada[1]]!='X'){
+        printf("error: la casilla no esta vacia");
+        return FALSE;
+    }
+    // recorro todas las direcciones
+    for (int i = -1; i < 2; i++){
+        for (int j = -1; j < 2; j++){
+            if (i==0 && j==0) continue;
+        }
+        
+    }
+    
+
+}
+
+int jugada_en_rango(int* jugada){
+    if (jugada[0]>7 || jugada[0]<0 || jugada[1]>7 || jugada[1]<0){
+        return FALSE;
+    }
+    return TRUE;
+}
+
+// -------------------------------------------------------
+
+void traducirJugada(char* jugada, int* jugadaTraducida){
+    jugadaTraducida[1] = (int)(toupper(jugada[0]))-'A';
+    jugadaTraducida[0] = (int)(jugada[1])-1;
 }
 
 // -------------------------------------------------------
