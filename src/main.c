@@ -236,27 +236,30 @@ int obtenerJugadas(FILE* fp, info_tablero* partida){
 }
 
 void analizarJugadas(info_tablero* partida, char* destino){
-    int terminado=FALSE, direcciones[8], jugada_valida=0, jugada[2];
+    int terminado=FALSE, direcciones[8], jugada_valida=0, jugada[2], previoSaltoDeTurno=FALSE;
     // cada posicion en direcciones determina si cierta
     // direccion debe ser modificada con un 1
     // direcciones[0] = (-1, -1) = NorOeste; direcciones[5] = (1, -1) = SurOeste
 
     for(int i=0; i<partida->cant_jugadas && !terminado; i++){
         if (partida->jugadas[i][0]!='\0'){
-            printf("jugada: %s\n", partida->jugadas[i]);
+            previoSaltoDeTurno=FALSE;
             traducirJugada(partida->jugadas[i], jugada);
             jugada_valida = validarJugada(partida, jugada, direcciones);
             if (jugada_valida){
                 realizarJugada(partida, jugada, direcciones);
-                mostrarTablero(partida);
             }
         }
         else{ // trata de saltar el turno
+            jugada_valida=TRUE;
             if(movimientoDisponible(partida)){
                 printf("Error!! no se puede saltear el turno con movimientos disponibles\n");
                 jugada_valida=FALSE;
             }
-            jugada_valida=TRUE;
+            if (previoSaltoDeTurno && jugada_valida){
+                terminado=TRUE;
+            }
+            previoSaltoDeTurno=TRUE;
         }
         if(!jugada_valida){
             terminado=TRUE;
@@ -271,6 +274,7 @@ void analizarJugadas(info_tablero* partida, char* destino){
         partida->colorActual = (partida->colorActual=='B') ? 'N' : 'B';
     }
     if (jugada_valida){
+        terminado = !movimientoDisponible(partida);
         if (!terminado){
             exportarPartida(partida, destino);
         }
@@ -298,11 +302,13 @@ int validarJugada(info_tablero* partida, int* jugada, int* direcciones){
     for (int i = -1; i < 2; i++){
         for (int j = -1; j < 2; j++){
             if (i==0 && j==0) continue;
-            if (jugada[0]+i<0 || jugada[0]+i>7 || jugada[1]+i<0 || jugada[0]+i>7){
+            // si el adyacente está fuera del tablero:
+            if (jugada[0]+i<0 || jugada[0]+i>7 || jugada[1]+i<0 || jugada[1]+i>7){
                 direcciones[direccion] = 0; // no vamos a considerar esta direccion
                 direccion++;
                 continue;
             }
+
             color_adyacente = partida->tablero[jugada[0]+i][jugada[1]+j];
             if (color_adyacente=='X' || color_adyacente==partida->colorActual){
                 direcciones[direccion] = 0; // no vamos a considerar esta direccion
@@ -368,13 +374,13 @@ int validarLinea(info_tablero* partida, int* jugada, int direccion_x, int direcc
     int cant_de_cambios=0, terminado=FALSE;
     char color_adyacente;
 
-    adyacente[0] = jugada[0]+direccion_x;
-    adyacente[1] = jugada[1]+direccion_y;
-    color_adyacente = partida->tablero[adyacente[0]][adyacente[1]];
+    adyacente[0] = jugada[0];
+    adyacente[1] = jugada[1];
     while(!terminado){
-        cant_de_cambios++;
         adyacente[0] += direccion_x;
         adyacente[1] += direccion_y;
+        if (!jugadaEnRango(adyacente)) return 0;
+
         color_adyacente = partida->tablero[adyacente[0]][adyacente[1]];
         if(color_adyacente==partida->colorActual){
             terminado=TRUE;
@@ -385,6 +391,7 @@ int validarLinea(info_tablero* partida, int* jugada, int direccion_x, int direcc
             cant_de_cambios=0; // la linea no es valida
             continue;
         }
+        cant_de_cambios++;
     }
 
     return cant_de_cambios;
@@ -406,6 +413,8 @@ void realizarJugada(info_tablero* partida, int* jugada, int* direcciones){
                 pos_adyacente[1] += j;
                 partida->tablero[pos_adyacente[0]][pos_adyacente[1]] = partida->colorActual;
             }
+            pos_adyacente[0] = jugada[0];
+            pos_adyacente[1] = jugada[1];
             direccion++;
         }
     }
@@ -449,13 +458,19 @@ int movimientoDisponible(info_tablero* partida){
 // -------------------------------------------------------
 
 void mostrarTablero(info_tablero* partida){
+    printf("    ABCDEFGH\n");
     for(int fila=0; fila<CANT_FILAS; fila++){
+        printf("%d | ", fila+1);
         for(int columna=0; columna<CANT_COLUMNAS; columna++){
-            printf("%c", partida->tablero[fila][columna]);
+            if (partida->tablero[fila][columna]=='X'){
+                printf(" ");
+            }
+            else{
+                printf("%c", partida->tablero[fila][columna]);
+            }
         }
         printf("\n");
     }
-    printf("%c\n", partida->colorActual);
 }
 
 // -------------------------------------------------------
@@ -488,13 +503,13 @@ void indicarGanador(info_tablero* partida){
         }
     }
     if (puntos_blancas>puntos_negras){
-        printf("El ganador es %s, con las fichas blancas (%d-%d)", partida->jugadorBlanco, puntos_blancas, puntos_negras);
+        printf("El ganador es %s, con las fichas blancas (%d-%d)\n", partida->jugadorBlanco, puntos_blancas, puntos_negras);
     }
     else if(puntos_blancas<puntos_negras){
-        printf("El ganador es %s, con las fichas negras (%d-%d)", partida->jugadorNegro, puntos_blancas, puntos_negras);
+        printf("El ganador es %s, con las fichas negras (%d-%d)\n", partida->jugadorNegro, puntos_blancas, puntos_negras);
     }
     else{
-        printf("La partida termino en empate. (%d-%d)", puntos_blancas, puntos_negras);
+        printf("La partida termino en empate. (%d-%d)\n", puntos_blancas, puntos_negras);
     }
 }
 
@@ -542,6 +557,7 @@ int tests(){
     // tests de procesarArchivo
     initPartida(&partida);
     assert(procesarArchivo("./recursos/prueba.txt", &partida)==0);
+    liberarPartida(&partida);
 
     // tests de leerNombre
     initPartida(&partida);
@@ -549,6 +565,7 @@ int tests(){
     fp = fopen("./recursos/prueba.txt", "r");
     assert(leerNombre(fp, &partida)==TRUE);
     fclose(fp);
+    liberarPartida(&partida);
 
     // tests de colorInicial
     initPartida(&partida);
