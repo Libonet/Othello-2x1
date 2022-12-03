@@ -36,10 +36,9 @@ int obtenerJugadas(FILE* fp, info_tablero* partida);
 
 void analizarJugadas(info_tablero* partida, char* destino);
 int validarJugada(info_tablero* partida, int* jugada, int* direcciones);
-int validarJugadaSinErrores(info_tablero* partida, int* jugada, int* direcciones);
 int validarLinea(info_tablero* partida, int* jugada, int direccion_x, int direccion_y);
 void realizarJugada(info_tablero* partida, int* jugada, int* direcciones);
-int jugadaEnRango(int* jugada);
+int casillaEnRango(int* jugada);
 void traducirJugada(char* jugada, int* jugadaTraducida);
 int movimientoDisponible(info_tablero* partida);
 // -------------------------------------------------------
@@ -58,12 +57,21 @@ int tests();
 // -------------------------------------------------------
 
 int main(int argc, char* argv[]){
-    // if (!tests()) // printf("Todos los tests correctos\n");
 
+    if (argc == 2 && strcmp("test", argv[1])==0){
+        if (!tests()){
+            printf("\033[H\033[J");
+            printf("Todos los tests correctos\n");
+            return 0;
+        }
+        else{
+            return -1;
+        }
+    }
     if (argc >= 3){
         return analizarPartida(argv[1], argv[2]);
     }
-    printf("Error!! no se ingreso un archivo\n");
+    // printf("Error!! no se ingreso un archivo\n");
     return -1; // Error
 }
 
@@ -71,7 +79,7 @@ int main(int argc, char* argv[]){
 
 // recibe un archivo de origen con jugadas que analizar
 // y devuelve 0 si se analizó correctamente, -1 si
-// hubo un error. si la partida resulta en empate, se
+// hubo un error de formateo. si la partida resulta en empate, se
 // imprime el tablero y el color actual en el destino
 int analizarPartida(char* origen, char* destino){
     info_tablero partida;
@@ -97,7 +105,7 @@ int procesarArchivo(char* origen, info_tablero* partida){
 
     fp = fopen(origen, "r");
     if(fp == NULL) {
-      printf("Error!! no se pudo abrir el archivo\n");
+    //   printf("Error!! no se pudo abrir el archivo\n");
       return -1;
     }
     // leo las primeras 2 lineas, que deberian tener nombre y color
@@ -143,7 +151,7 @@ int leerNombre(FILE* fp, info_tablero* partida){
             }
         }
         if (cantidad_de_argumentos != 2){
-            printf("Error!! cantidad de argumentos erronea, se necesita nombre y color\n");
+            // printf("Error!! cantidad de argumentos erronea, se necesita nombre y color\n");
             return FALSE;
         }
         if (color=='B' && partida->jugadorBlanco==NULL && (fbuffer[j]==' ' || fbuffer[j]=='\n' || fbuffer[j]=='\r')){
@@ -163,10 +171,10 @@ int leerNombre(FILE* fp, info_tablero* partida){
             return TRUE;
         }
 
-        printf("Error!! formato del color de jugador invalido\n");
+        // printf("Error!! formato del color de jugador invalido\n");
         return FALSE;
     }
-    printf("Error!! no se pudo obtener el nombre\n");
+    // printf("Error!! no se pudo obtener el nombre\n");
     return FALSE;
 }
 
@@ -181,12 +189,12 @@ int colorInicial(FILE* fp, info_tablero* partida){
         partida->colorActual = c;
 
         if (partida->colorActual != 'B' && partida->colorActual != 'N'){
-            printf("Error!! color inicial invalido\n");
+            // printf("Error!! color inicial invalido\n");
             return FALSE;
         }
         return TRUE;
     }
-    printf("Error!! no se pudo obtener el color\n");
+    // printf("Error!! no se pudo obtener el color\n");
     return FALSE;
 }
 
@@ -213,7 +221,7 @@ int obtenerJugadas(FILE* fp, info_tablero* partida){
             }
             else{
                 error=TRUE;
-                printf("Error!! formato de jugada invalido\n");
+                // printf("Error!! formato de jugada invalido\n");
             }
             if(buffer[2]=='\n' || buffer[2]=='\r'){
                 partida->jugadas[partida->cant_jugadas++][j]='\0';
@@ -221,7 +229,7 @@ int obtenerJugadas(FILE* fp, info_tablero* partida){
             }
             else{
                 error=TRUE;
-                printf("Error!! formato de jugada invalido\n");
+                // printf("Error!! formato de jugada invalido\n");
             }
         }
         else{
@@ -242,7 +250,7 @@ void analizarJugadas(info_tablero* partida, char* destino){
     // direcciones[0] = (-1, -1) = NorOeste; direcciones[5] = (1, -1) = SurOeste
 
     for(int i=0; i<partida->cant_jugadas && !terminado; i++){
-        if (partida->jugadas[i][0]!='\0'){
+        if (partida->jugadas[i][0]!='\0'){ // no trata de saltar el turno
             previoSaltoDeTurno=FALSE;
             traducirJugada(partida->jugadas[i], jugada);
             jugada_valida = validarJugada(partida, jugada, direcciones);
@@ -253,10 +261,10 @@ void analizarJugadas(info_tablero* partida, char* destino){
         else{ // trata de saltar el turno
             jugada_valida=TRUE;
             if(movimientoDisponible(partida)){
-                printf("Error!! no se puede saltear el turno con movimientos disponibles\n");
+                // printf("Error!! no se puede saltear el turno con movimientos disponibles\n");
                 jugada_valida=FALSE;
             }
-            if (previoSaltoDeTurno && jugada_valida){
+            if (previoSaltoDeTurno && jugada_valida){ // si ocurre 2 veces seguidas, termina la partida
                 terminado=TRUE;
             }
             previoSaltoDeTurno=TRUE;
@@ -287,23 +295,25 @@ void analizarJugadas(info_tablero* partida, char* destino){
 // -------------------------------------------------------
 
 int validarJugada(info_tablero* partida, int* jugada, int* direcciones){
-    int direccion=0, jugada_valida=FALSE, cant_de_cambios=FALSE;
+    int direccion=0, jugada_valida=FALSE, cant_de_cambios=FALSE, adyacente[2];
     char color_adyacente;
 
-    if (!jugadaEnRango(jugada)){
-        printf("Error!! la jugada no esta en el tablero\n");
+    if (!casillaEnRango(jugada)){
+        // printf("Error!! la jugada no esta en el tablero\n");
         return FALSE;
     }
     if (partida->tablero[jugada[0]][jugada[1]]!='X'){
-        printf("Error!! la casilla no esta vacia\n");
+        // printf("Error!! la casilla no esta vacia\n");
         return FALSE;
     }
     // recorro todas las direcciones
     for (int i = -1; i < 2; i++){
         for (int j = -1; j < 2; j++){
             if (i==0 && j==0) continue;
+            adyacente[0] = jugada[0]+i;
+            adyacente[1] = jugada[1]+j;
             // si el adyacente está fuera del tablero:
-            if (jugada[0]+i<0 || jugada[0]+i>7 || jugada[1]+i<0 || jugada[1]+i>7){
+            if (!casillaEnRango(adyacente)){
                 direcciones[direccion] = 0; // no vamos a considerar esta direccion
                 direccion++;
                 continue;
@@ -326,42 +336,7 @@ int validarJugada(info_tablero* partida, int* jugada, int* direcciones){
         }
     }
     if (!jugada_valida){
-        printf("Error!! no hay fichas del adversario adyacentes\n");
-        return FALSE;
-    }
-    return TRUE;
-}
-
-int validarJugadaSinErrores(info_tablero*partida, int* jugada, int* direcciones){
-    int direccion=0, jugada_valida=FALSE, cant_de_cambios=FALSE;
-    char color_adyacente;
-
-    if (!jugadaEnRango(jugada)){
-        return FALSE;
-    }
-    if (partida->tablero[jugada[0]][jugada[1]]!='X'){
-        return FALSE;
-    }
-    // recorro todas las direcciones
-    for (int i = -1; i < 2; i++){
-        for (int j = -1; j < 2; j++){
-            if (i==0 && j==0) continue;
-            if (jugada[0]+i<0 || jugada[0]+i>7 || jugada[1]+i<0 || jugada[0]+i>7) continue;
-            color_adyacente = partida->tablero[jugada[0]+i][jugada[1]+j];
-            if (color_adyacente=='X' || color_adyacente==partida->colorActual){
-                direcciones[direccion] = 0; // no vamos a considerar esta direccion
-            }
-            else{
-                cant_de_cambios = validarLinea(partida, jugada, i, j);
-                direcciones[direccion] = cant_de_cambios;
-                if (!jugada_valida && cant_de_cambios!=0){
-                    jugada_valida = TRUE;
-                }
-            }
-            direccion++;
-        }
-    }
-    if (!jugada_valida){
+        // printf("Error!! no hay fichas del adversario adyacentes\n");
         return FALSE;
     }
     return TRUE;
@@ -379,7 +354,7 @@ int validarLinea(info_tablero* partida, int* jugada, int direccion_x, int direcc
     while(!terminado){
         adyacente[0] += direccion_x;
         adyacente[1] += direccion_y;
-        if (!jugadaEnRango(adyacente)) return 0;
+        if (!casillaEnRango(adyacente)) return 0;
 
         color_adyacente = partida->tablero[adyacente[0]][adyacente[1]];
         if(color_adyacente==partida->colorActual){
@@ -423,11 +398,11 @@ void realizarJugada(info_tablero* partida, int* jugada, int* direcciones){
 
 // -------------------------------------------------------
 
-int jugadaEnRango(int* jugada){
-    if (jugada[0]<=7 && jugada[0]>=0 && jugada[1]<=7 && jugada[1]>=0){
-        return TRUE;
+int casillaEnRango(int* jugada){
+    if (jugada[0]>7 || jugada[0]<0 || jugada[1]>7 || jugada[1]<0){
+        return FALSE;
     }
-    return FALSE;
+    return TRUE;
 }
 
 // -------------------------------------------------------
@@ -447,7 +422,8 @@ int movimientoDisponible(info_tablero* partida){
             if (partida->tablero[fila][columna]=='X'){
                 jugada[0] = fila;
                 jugada[1] = columna;
-                jugada_valida = validarJugadaSinErrores(partida, jugada, direcciones);
+                printf("jugada: %d %d\n", jugada[0], jugada[1]);
+                jugada_valida = validarJugada(partida, jugada, direcciones);
             }
         }
     }
@@ -458,7 +434,7 @@ int movimientoDisponible(info_tablero* partida){
 // -------------------------------------------------------
 
 void mostrarTablero(info_tablero* partida){
-    printf("    ABCDEFGH\n");
+    printf("    A | B | C | D | E | F | G | H |\n");
     for(int fila=0; fila<CANT_FILAS; fila++){
         printf("%d | ", fila+1);
         for(int columna=0; columna<CANT_COLUMNAS; columna++){
@@ -468,6 +444,7 @@ void mostrarTablero(info_tablero* partida){
             else{
                 printf("%c", partida->tablero[fila][columna]);
             }
+            printf(" | ");
         }
         printf("\n");
     }
@@ -552,11 +529,15 @@ int tests(){
 
     // tests de analizarPartida
     assert(analizarPartida("./recursos/prueba.txt", "./recursos/tablero.txt")==0);
+    assert(analizarPartida("./recursos/prueba2.txt", "./recursos/tablero.txt")==-1);
 
 
     // tests de procesarArchivo
     initPartida(&partida);
     assert(procesarArchivo("./recursos/prueba.txt", &partida)==0);
+    liberarPartida(&partida);
+    initPartida(&partida);
+    assert(procesarArchivo("./recursos/prueba2.txt", &partida)==-1);
     liberarPartida(&partida);
 
     // tests de leerNombre
@@ -584,6 +565,8 @@ int tests(){
 
     traducirJugada("C5", jugada);
     assert(validarJugada(&partida, jugada, direcciones)==TRUE);
+    traducirJugada("A1", jugada);
+    assert(validarJugada(&partida, jugada, direcciones)==FALSE);
 
     // tests de validarLinea
     initPartida(&partida);
@@ -595,24 +578,30 @@ int tests(){
     assert(validarLinea(&partida, jugada, 0, 1)==TRUE);
     assert(validarLinea(&partida, jugada, -1, 1)==FALSE);
 
-    // tests de jugadaEnRango
+    // tests de casillaEnRango
     traducirJugada("A8", jugada);
-    assert(jugadaEnRango(jugada)==TRUE);
+    assert(casillaEnRango(jugada)==TRUE);
     // por como funciona el programa, solo se toman 2 caracteres
-    // del archivo por linea, por lo que traducirJugada solo toma los primeros
-    // 2 caracteres del string
+    // del archivo por linea y tira un error de formato si hay mas,
+    // por lo que traducirJugada solo toma los primeros 2 caracteres del string
+    // y por lo tanto "A10"="A1", que está en el tablero.
     traducirJugada("A10", jugada);
-    assert(jugadaEnRango(jugada)==TRUE);
+    assert(casillaEnRango(jugada)==TRUE);
     traducirJugada("PA", jugada);
-    assert(jugadaEnRango(jugada)==FALSE);
+    assert(casillaEnRango(jugada)==FALSE);
     traducirJugada("66", jugada);
-    assert(jugadaEnRango(jugada)==FALSE);
+    assert(casillaEnRango(jugada)==FALSE);
 
     // tests de movimientoDisponible
     initPartida(&partida);
     partida.colorActual = 'B';
-
     assert(movimientoDisponible(&partida)==TRUE);
+
+    initPartida(&partida);
+    procesarArchivo("./recursos/terminada.txt", &partida);
+    analizarJugadas(&partida, "./recursos/tablero.txt");
+    assert(movimientoDisponible(&partida)==FALSE);
+    liberarPartida(&partida);
 
     return 0;
 }

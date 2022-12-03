@@ -1,6 +1,6 @@
-Alejandro,B
-Federico,N
-N
+Alejandro B
+Federico N
+P
 D3
 G4
 F5
