@@ -56,11 +56,12 @@ int tests();
 
 // -------------------------------------------------------
 
+// main maneja los comandos ingresados por consola.
 int main(int argc, char* argv[]){
 
     if (argc == 2 && strcmp("test", argv[1])==0){
         if (!tests()){
-            printf("\033[H\033[J");
+            printf("\033[H\033[J"); // limpia la consola
             printf("Todos los tests correctos\n");
             return 0;
         }
@@ -99,6 +100,9 @@ int analizarPartida(char* origen, char* destino){
 
 // -------------------------------------------------------
 
+// recibe un archivo de origen y la direccion de la partida
+// y almacena en ella los datos que obtiene del archivo.
+// retorna -1 si hay un error en el formato, 0 si todo sale bien
 int procesarArchivo(char* origen, info_tablero* partida){
     FILE* fp;
     int formatoValido = TRUE;
@@ -130,13 +134,16 @@ int procesarArchivo(char* origen, info_tablero* partida){
 
 // -------------------------------------------------------
 
+// leer nombre recibe la direccion a un archivo y la direccion
+// a una partida, y almacena en la memoria el nombre
+// de un jugador. El nombre del puntero identifica su color
 int leerNombre(FILE* fp, info_tablero* partida){
     char fbuffer[100], nombre[100];
     char color=' ', c;
     int cantidad_de_argumentos, terminado=FALSE, size_nombre=0, j=0;
     if (fgets(fbuffer, 100, fp)!=NULL){
         for(int i=0; (c = fbuffer[i]) != '\n' && c != '\r' && !terminado; i++){
-            if (c==',' && i!=0){
+            if (c==',' && size_nombre!=0){
                 nombre[size_nombre] = '\0';
                 // despues de ',' ignora todos los espacios y obtiene el primer caracter
                 for(j=i+1; color==' '; j++){ 
@@ -283,6 +290,10 @@ void analizarJugadas(info_tablero* partida, char* destino){
     }
     if (jugada_valida){
         terminado = !movimientoDisponible(partida);
+        if (terminado){
+            partida->colorActual = (partida->colorActual=='B') ? 'N' : 'B';
+            terminado = !movimientoDisponible(partida);
+        }
         if (!terminado){
             exportarPartida(partida, destino);
         }
@@ -408,8 +419,9 @@ int casillaEnRango(int* jugada){
 // -------------------------------------------------------
 
 void traducirJugada(char* jugada, int* jugadaTraducida){
-    jugadaTraducida[1] = (int)(toupper(jugada[0]))-'A';
+    // jugadaTraducida: (fila, columna)
     jugadaTraducida[0] = (int)((jugada[1])-'0')-1;
+    jugadaTraducida[1] = (int)(toupper(jugada[0]))-'A';
 }
 
 // -------------------------------------------------------
@@ -422,7 +434,6 @@ int movimientoDisponible(info_tablero* partida){
             if (partida->tablero[fila][columna]=='X'){
                 jugada[0] = fila;
                 jugada[1] = columna;
-                printf("jugada: %d %d\n", jugada[0], jugada[1]);
                 jugada_valida = validarJugada(partida, jugada, direcciones);
             }
         }
@@ -486,7 +497,7 @@ void indicarGanador(info_tablero* partida){
         printf("El ganador es %s, con las fichas negras (%d-%d)\n", partida->jugadorNegro, puntos_blancas, puntos_negras);
     }
     else{
-        printf("La partida termino en empate. (%d-%d)\n", puntos_blancas, puntos_negras);
+        printf("La partida termina en empate. (%d-%d)\n", puntos_blancas, puntos_negras);
     }
 }
 
@@ -494,9 +505,9 @@ void indicarGanador(info_tablero* partida){
 
 void initPartida(info_tablero* partida){
     int centroF, centroC;
-    for(int i=0; i<CANT_FILAS; i++){
-        for(int j=0; j<CANT_COLUMNAS; j++){
-            partida->tablero[i][j] = 'X';
+    for(int fila=0; fila<CANT_FILAS; fila++){
+        for(int columna=0; columna<CANT_COLUMNAS; columna++){
+            partida->tablero[fila][columna] = 'X';
         }
     }
     // como estamos jugando Othello, el tablero comienza con 4 fichas en el centro del tablero
@@ -528,30 +539,33 @@ int tests(){
     int jugada[2], direcciones[8];
 
     // tests de analizarPartida
-    assert(analizarPartida("./recursos/prueba.txt", "./recursos/tablero.txt")==0);
-    assert(analizarPartida("./recursos/prueba2.txt", "./recursos/tablero.txt")==-1);
+    assert(analizarPartida("../recursos/prueba.txt", "./tablero.txt")==0);
+    assert(analizarPartida("../recursos/prueba2.txt", "./tablero.txt")==-1);
 
 
     // tests de procesarArchivo
     initPartida(&partida);
-    assert(procesarArchivo("./recursos/prueba.txt", &partida)==0);
+    assert(procesarArchivo("../recursos/prueba.txt", &partida)==0);
     liberarPartida(&partida);
     initPartida(&partida);
-    assert(procesarArchivo("./recursos/prueba2.txt", &partida)==-1);
+    assert(procesarArchivo("../recursos/prueba2.txt", &partida)==-1);
     liberarPartida(&partida);
 
     // tests de leerNombre
     initPartida(&partida);
     
-    fp = fopen("./recursos/prueba.txt", "r");
+    fp = fopen("../recursos/prueba.txt", "r");
     assert(leerNombre(fp, &partida)==TRUE);
+    fclose(fp);
+    fp = fopen("../recursos/prueba2.txt", "r");
+    assert(leerNombre(fp, &partida)==FALSE);
     fclose(fp);
     liberarPartida(&partida);
 
     // tests de colorInicial
     initPartida(&partida);
 
-    fp = fopen("./recursos/prueba.txt", "r");
+    fp = fopen("../recursos/prueba.txt", "r");
     for (char i; (i=fgetc(fp)!='\n');); // salteo la linea 1
     for (char i; (i=fgetc(fp)!='\n');); // y la linea 2
     assert(colorInicial(fp, &partida)==TRUE);
@@ -598,8 +612,8 @@ int tests(){
     assert(movimientoDisponible(&partida)==TRUE);
 
     initPartida(&partida);
-    procesarArchivo("./recursos/terminada.txt", &partida);
-    analizarJugadas(&partida, "./recursos/tablero.txt");
+    procesarArchivo("../recursos/terminada.txt", &partida);
+    analizarJugadas(&partida, "./tablero.txt");
     assert(movimientoDisponible(&partida)==FALSE);
     liberarPartida(&partida);
 
