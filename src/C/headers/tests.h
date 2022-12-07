@@ -12,6 +12,8 @@ void test_leerNombre();
 
 void test_colorInicial();
 
+void test_obtenerJugadas();
+
 void test_validarJugada();
 
 void test_validarLinea();

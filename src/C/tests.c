@@ -22,16 +22,16 @@ int main(){
     return 0;
 }
 
+// tests de analizarPartida
 void test_analizarPartida(){
-    // tests de analizarPartida
     assert(analizarPartida("./recursos/prueba.txt", "./recursos/tablero.txt")==0);
     assert(analizarPartida("./recursos/prueba2.txt", "./recursos/tablero.txt")==-1);
 }
 
+// tests de procesarArchivo
 void test_procesarArchivo(){
     info_tablero partida;
 
-    // tests de procesarArchivo
     initPartida(&partida);
     assert(procesarArchivo("./recursos/prueba.txt", &partida)==0);
     liberarPartida(&partida);
@@ -40,11 +40,11 @@ void test_procesarArchivo(){
     liberarPartida(&partida);
 }
 
+// tests de leerNombre
 void test_leerNombre(){
     info_tablero partida;
     FILE* fp;
 
-    // tests de leerNombre
     initPartida(&partida);
     
     fp = fopen("./recursos/prueba.txt", "r");
@@ -53,11 +53,11 @@ void test_leerNombre(){
     liberarPartida(&partida);
 }
 
+// tests de colorInicial
 void test_colorInicial(){
     info_tablero partida;
     FILE* fp;
 
-    // tests de colorInicial
     initPartida(&partida);
 
     fp = fopen("./recursos/prueba.txt", "r");
@@ -67,11 +67,27 @@ void test_colorInicial(){
     fclose(fp);
 }
 
+// test de obtenerJugadas
+void test_obtenerJugadas(){
+    info_tablero partida;
+    FILE* fp;
+
+    initPartida(&partida);
+
+    fp = fopen("./recursos/terminada.txt", "r");
+    for (char i; (i=fgetc(fp)!='\n');); // salteo la linea 1
+    for (char i; (i=fgetc(fp)!='\n');); // y la linea 2
+    for (char i; (i=fgetc(fp)!='\n');); // y la linea 3
+    
+    assert(obtenerJugadas(fp, &partida)==TRUE);
+    fclose(fp);
+}
+
+// tests de validarJugada
 void test_validarJugada(){
     info_tablero partida;
     int jugada[2], direcciones[8];
 
-    // tests de validarJugada
     initPartida(&partida);
     partida.jugadorBlanco = "Santiago";
     partida.jugadorNegro = "Pepe";
@@ -83,11 +99,11 @@ void test_validarJugada(){
     assert(validarJugada(&partida, jugada, direcciones)==FALSE);
 }
 
+// tests de validarLinea
 void test_validarLinea(){
     info_tablero partida;
     int jugada[2];
 
-    // tests de validarLinea
     initPartida(&partida);
     partida.jugadorBlanco = "Santiago";
     partida.jugadorNegro = "Pepe";
@@ -98,16 +114,17 @@ void test_validarLinea(){
     assert(validarLinea(&partida, jugada, -1, 1)==FALSE);
 }
 
+// tests de casillaEnRango
 void test_casillaEnRango(){
     int jugada[2];
 
-    // tests de casillaEnRango
     traducirJugada("A8", jugada);
     assert(casillaEnRango(jugada)==TRUE);
     // por como funciona el programa, solo se toman 2 caracteres
     // del archivo por linea y tira un error de formato si hay mas,
     // por lo que traducirJugada solo toma los primeros 2 caracteres del string
-    // y por lo tanto "A10"="A1", que está en el tablero.
+    // y por lo tanto A10 es imposible y por lo tanto
+    // "A10"="A1", que está en el tablero.
     traducirJugada("A10", jugada);
     assert(casillaEnRango(jugada)==TRUE);
     traducirJugada("PA", jugada);
@@ -116,10 +133,10 @@ void test_casillaEnRango(){
     assert(casillaEnRango(jugada)==FALSE);
 }
 
+// tests de movimientoDisponible
 void test_movimientoDisponible(){
     info_tablero partida;
 
-    // tests de movimientoDisponible
     initPartida(&partida);
     partida.colorActual = 'B';
     assert(movimientoDisponible(&partida)==TRUE);

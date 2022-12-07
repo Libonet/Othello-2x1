@@ -2,7 +2,7 @@
 
 ## OthelloC
 
-Este programa **analiza una partida de Othello** (con un espacio al final) y dependiendo de si *se gana*, *hay un error en el archivo*, o *la partida está incompleta*; respectivamente, *se imprime en pantalla el ganador*, *se indica quién cometió el error*, o *se imprime en un archivo el tablero hasta el momento y quién debe seguir jugando*.
+Este programa **analiza una partida de Othello** y dependiendo de si *se gana*, *hay un error en el archivo*, o *la partida está incompleta*; respectivamente, *se imprime en pantalla el ganador*, *se indica quién cometió el error*, o *se imprime en un archivo el tablero hasta el momento y quién debe seguir jugando*.
 
 ## OthelloPy
 

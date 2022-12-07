@@ -124,41 +124,67 @@ int colorInicial(FILE* fp, info_tablero* partida){
 // -------------------------------------------------------
 
 int obtenerJugadas(FILE* fp, info_tablero* partida){
-    char buffer[10];
+    char letra; // buffer[10];
     int terminado=FALSE, error=FALSE;
 
-    for (int j = 0; !terminado && !error;){
-        j = 0;
-        if (fgets(buffer, 10, fp)!=NULL){
-            if (buffer[0]==' ' || buffer[0]=='\n' || buffer[0]=='\r'){
-                partida->jugadas[partida->cant_jugadas++][0]='\0';
+    for (int i = 0; !terminado && !error;){
+        letra = fgetc(fp);
+        if (letra=='\r'){
+            letra = fgetc(fp);
+        }
+
+        if (i==0 || i==2){
+            if (letra==EOF){
+                partida->jugadas[partida->cant_jugadas++][i]='\0';
+                terminado=TRUE;
                 continue;
             }
-            else{
-                partida->jugadas[partida->cant_jugadas][j]=buffer[j];
-                j++;
-            }
-            if (buffer[1]!=' ' && buffer[1]!='\n' && buffer[1]!='\r'){
-                partida->jugadas[partida->cant_jugadas][j]=buffer[j];
-                j++;
-            }
-            else{
-                error=TRUE;
-                printf("Error!! formato de jugada invalido\n");
-            }
-            if(buffer[2]=='\n' || buffer[2]=='\r'){
-                partida->jugadas[partida->cant_jugadas++][j]='\0';
+            if (letra=='\n'){
+                partida->jugadas[partida->cant_jugadas++][i]='\0';
+                i=0;
                 continue;
             }
-            else{
-                error=TRUE;
-                printf("Error!! formato de jugada invalido\n");
-            }
         }
-        else{
-            terminado=TRUE;
+        if (i==1 && (letra==EOF || letra=='\n')){
+            error=TRUE;
+            continue;
         }
+        partida->jugadas[partida->cant_jugadas][i]=letra;
+        i++;
     }
+
+    // for (int i = 0; !terminado && !error;){
+    //     i = 0;
+    //     if (fgets(buffer, 10, fp)!=NULL){
+    //         if (buffer[0]==' ' || buffer[0]=='\n' || buffer[0]=='\r'){
+    //             partida->jugadas[partida->cant_jugadas++][0]='\0';
+    //             continue;
+    //         }
+    //         else{
+    //             partida->jugadas[partida->cant_jugadas][i]=buffer[i];
+    //             i++;
+    //         }
+    //         if (buffer[1]!=' ' && buffer[1]!='\n' && buffer[1]!='\r'){
+    //             partida->jugadas[partida->cant_jugadas][i]=buffer[i];
+    //             i++;
+    //         }
+    //         else{
+    //             error=TRUE;
+    //             printf("Error!! formato de jugada invalido\n");
+    //         }
+    //         if(buffer[2]=='\n' || buffer[2]=='\r'){
+    //             partida->jugadas[partida->cant_jugadas++][i]='\0';
+    //             continue;
+    //         }
+    //         else{
+    //             error=TRUE;
+    //             printf("Error!! formato de jugada invalido\n");
+    //         }
+    //     }
+    //     else{
+    //         terminado=TRUE;
+    //     }
+    // }
 
     if (error){
         return FALSE;
@@ -236,11 +262,11 @@ int validarJugada(info_tablero* partida, int* jugada, int* direcciones){
         return FALSE;
     }
     // recorro todas las direcciones
-    for (int i = -1; i < 2; i++){
-        for (int j = -1; j < 2; j++){
-            if (i==0 && j==0) continue;
-            adyacente[0] = jugada[0]+i;
-            adyacente[1] = jugada[1]+j;
+    for (int vecY = -1; vecY < 2; vecY++){
+        for (int vecX = -1; vecX < 2; vecX++){
+            if (vecX==0 && vecY==0) continue;
+            adyacente[0] = jugada[0]+vecX;
+            adyacente[1] = jugada[1]+vecY;
             // si el adyacente está fuera del tablero:
             if (!casillaEnRango(adyacente)){
                 direcciones[direccion] = 0; // no vamos a considerar esta direccion
@@ -248,14 +274,14 @@ int validarJugada(info_tablero* partida, int* jugada, int* direcciones){
                 continue;
             }
 
-            color_adyacente = partida->tablero[jugada[0]+i][jugada[1]+j];
+            color_adyacente = partida->tablero[adyacente[0]][adyacente[1]];
             if (color_adyacente=='X' || color_adyacente==partida->colorActual){
                 direcciones[direccion] = 0; // no vamos a considerar esta direccion
                 direccion++;
                 continue;
             }
             else{
-                cant_de_cambios = validarLinea(partida, jugada, i, j);
+                cant_de_cambios = validarLinea(partida, jugada, vecX, vecY);
                 direcciones[direccion] = cant_de_cambios;
                 direccion++;
                 if (!jugada_valida && cant_de_cambios!=0){
@@ -309,12 +335,12 @@ void realizarJugada(info_tablero* partida, int* jugada, int* direcciones){
     pos_adyacente[1] = jugada[1];
 
     partida->tablero[jugada[0]][jugada[1]] = partida->colorActual;
-    for (int i = -1; i < 2; i++){
-        for (int j = -1; j < 2; j++){
-            if (i==0 && j==0) continue;
+    for (int vecY = -1; vecY < 2; vecY++){
+        for (int vecX = -1; vecX < 2; vecX++){
+            if (vecX==0 && vecY==0) continue;
             for (int cambios = 0; cambios < direcciones[direccion]; cambios++){
-                pos_adyacente[0] += i;
-                pos_adyacente[1] += j;
+                pos_adyacente[0] += vecX;
+                pos_adyacente[1] += vecY;
                 partida->tablero[pos_adyacente[0]][pos_adyacente[1]] = partida->colorActual;
             }
             pos_adyacente[0] = jugada[0];
@@ -422,9 +448,9 @@ void indicarGanador(info_tablero* partida){
 
 void initPartida(info_tablero* partida){
     int centroF, centroC;
-    for(int i=0; i<CANT_FILAS; i++){
-        for(int j=0; j<CANT_COLUMNAS; j++){
-            partida->tablero[i][j] = 'X';
+    for(int fila=0; fila<CANT_FILAS; fila++){
+        for(int columna=0; columna<CANT_COLUMNAS; columna++){
+            partida->tablero[fila][columna] = 'X';
         }
     }
     // como estamos jugando Othello, el tablero comienza con 4 fichas en el centro del tablero
