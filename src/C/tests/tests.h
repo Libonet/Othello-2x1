@@ -2,7 +2,7 @@
 #define __TESTS_H__
 
 #include <assert.h>
-#include "../funciones/funciones.c"
+#include "funciones.h"
 
 int tests();
 

@@ -1,4 +1,4 @@
-#include "../funciones/funciones.c"
+#include "funciones.h"
 
 // -------------------------------------------------------
 

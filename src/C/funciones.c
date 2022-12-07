@@ -131,41 +131,31 @@ int colorInicial(FILE* fp, info_tablero* partida){
 
 int obtenerJugadas(FILE* fp, info_tablero* partida){
     char buffer[10];
-    int terminado=FALSE, error=FALSE;
+    int error=FALSE;
 
-    for (int j = 0; !terminado && !error;){
+    for (int j = 0; feof(fp) && !error;){
         j = 0;
-        if (fgets(buffer, 10, fp)!=NULL){
-            if (buffer[0]==' ' || buffer[0]=='\n' || buffer[0]=='\r'){
-                partida->jugadas[partida->cant_jugadas++][0]='\0';
-                continue;
-            }
-            else{
-                partida->jugadas[partida->cant_jugadas][j]=buffer[j];
-                j++;
-            }
-            if (buffer[1]!=' ' && buffer[1]!='\n' && buffer[1]!='\r'){
-                partida->jugadas[partida->cant_jugadas][j]=buffer[j];
-                j++;
-            }
-            else{
-                error=TRUE;
-                // printf("Error!! formato de jugada invalido\n");
-            }
-            if(buffer[2]=='\n' || buffer[2]=='\r'){
-                partida->jugadas[partida->cant_jugadas++][j]='\0';
-                continue;
-            }
-            else{
-                error=TRUE;
-                // printf("Error!! formato de jugada invalido\n");
-            }
+        fgets(buffer, 10, fp);
+        if (buffer[0]==' ' || buffer[0]=='\n' || buffer[0]=='\r'){
+            partida->jugadas[partida->cant_jugadas++][0]='\0';
+            continue;
         }
         else{
-            terminado=TRUE;
+            partida->jugadas[partida->cant_jugadas][j]=buffer[j];
+            j++;
         }
+        if (buffer[1]!=' ' && buffer[1]!='\n' && buffer[1]!='\r'){
+            partida->jugadas[partida->cant_jugadas][j]=buffer[j];
+            j++;
+        }
+        else{
+            error=TRUE;
+            continue;
+            // printf("Error!! formato de jugada invalido\n");
+        }
+        partida->jugadas[partida->cant_jugadas++][j]='\0';
+        printf("jugada: %s\n", partida->jugadas[partida->cant_jugadas-1]);
     }
-
     if (error){
         return FALSE;
     }
