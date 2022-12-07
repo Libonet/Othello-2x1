@@ -1,82 +1,4 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-#include <ctype.h>
-
-#define CANT_FILAS 8
-#define CANT_COLUMNAS 8
-#define TRUE 1
-#define FALSE 0
-
-// esta estructura define la informacion necesaria
-// para representar la partida de Othello
-typedef struct Partida{
-    char tablero[CANT_FILAS][CANT_COLUMNAS];
-    char* jugadorBlanco;
-    char* jugadorNegro;
-    char jugadas[60][3];
-    int cant_jugadas;
-    char colorActual;
-} info_tablero;
-
-// -------------------------------------------------------
-// funcion principal
-
-int analizarPartida(char* origen, char* destino);
-// -------------------------------------------------------
-// checkeo del formato
-
-int procesarArchivo(char* origen, info_tablero* partida);
-int leerNombre(FILE* fp, info_tablero* partida);
-int colorInicial(FILE* fp, info_tablero* partida);
-int obtenerJugadas(FILE* fp, info_tablero* partida);
-// -------------------------------------------------------
-// analisis de jugadas
-
-void analizarJugadas(info_tablero* partida, char* destino);
-int validarJugada(info_tablero* partida, int* jugada, int* direcciones);
-int validarLinea(info_tablero* partida, int* jugada, int direccion_x, int direccion_y);
-void realizarJugada(info_tablero* partida, int* jugada, int* direcciones);
-int casillaEnRango(int* jugada);
-void traducirJugada(char* jugada, int* jugadaTraducida);
-int movimientoDisponible(info_tablero* partida);
-// -------------------------------------------------------
-// imprimir
-
-void mostrarTablero(info_tablero* partida);
-void exportarPartida(info_tablero* partida, char* destino);
-void indicarGanador(info_tablero* partida);
-// -------------------------------------------------------
-// utilidades
-
-void initPartida(info_tablero* partida);
-void liberarPartida(info_tablero* partida);
-int tests();
-
-// -------------------------------------------------------
-
-// main maneja los comandos ingresados por consola.
-int main(int argc, char* argv[]){
-
-    if (argc == 2 && strcmp("test", argv[1])==0){
-        if (!tests()){
-            printf("\033[H\033[J"); // limpia la consola
-            printf("Todos los tests correctos\n");
-            return 0;
-        }
-        else{
-            return -1;
-        }
-    }
-    if (argc >= 3){
-        return analizarPartida(argv[1], argv[2]);
-    }
-    // printf("Error!! no se ingreso un archivo\n");
-    return -1; // Error
-}
-
-// -------------------------------------------------------
+#include "funciones.h"
 
 // recibe un archivo de origen con jugadas que analizar
 // y devuelve 0 si se analizó correctamente, -1 si
@@ -293,6 +215,7 @@ void analizarJugadas(info_tablero* partida, char* destino){
         if (terminado){
             partida->colorActual = (partida->colorActual=='B') ? 'N' : 'B';
             terminado = !movimientoDisponible(partida);
+            partida->colorActual = (partida->colorActual=='B') ? 'N' : 'B';
         }
         if (!terminado){
             exportarPartida(partida, destino);
@@ -529,95 +452,6 @@ void initPartida(info_tablero* partida){
 void liberarPartida(info_tablero* partida){
     free(partida->jugadorBlanco);
     free(partida->jugadorNegro);
-}
-
-// -------------------------------------------------------
-
-int tests(){
-    FILE* fp;
-    info_tablero partida;
-    int jugada[2], direcciones[8];
-
-    // tests de analizarPartida
-    assert(analizarPartida("../recursos/prueba.txt", "./tablero.txt")==0);
-    assert(analizarPartida("../recursos/prueba2.txt", "./tablero.txt")==-1);
-
-
-    // tests de procesarArchivo
-    initPartida(&partida);
-    assert(procesarArchivo("../recursos/prueba.txt", &partida)==0);
-    liberarPartida(&partida);
-    initPartida(&partida);
-    assert(procesarArchivo("../recursos/prueba2.txt", &partida)==-1);
-    liberarPartida(&partida);
-
-    // tests de leerNombre
-    initPartida(&partida);
-    
-    fp = fopen("../recursos/prueba.txt", "r");
-    assert(leerNombre(fp, &partida)==TRUE);
-    fclose(fp);
-    fp = fopen("../recursos/prueba2.txt", "r");
-    assert(leerNombre(fp, &partida)==FALSE);
-    fclose(fp);
-    liberarPartida(&partida);
-
-    // tests de colorInicial
-    initPartida(&partida);
-
-    fp = fopen("../recursos/prueba.txt", "r");
-    for (char i; (i=fgetc(fp)!='\n');); // salteo la linea 1
-    for (char i; (i=fgetc(fp)!='\n');); // y la linea 2
-    assert(colorInicial(fp, &partida)==TRUE);
-    fclose(fp);
-
-    // tests de validarJugada
-    initPartida(&partida);
-    partida.jugadorBlanco = "Santiago";
-    partida.jugadorNegro = "Pepe";
-    partida.colorActual = 'B';
-
-    traducirJugada("C5", jugada);
-    assert(validarJugada(&partida, jugada, direcciones)==TRUE);
-    traducirJugada("A1", jugada);
-    assert(validarJugada(&partida, jugada, direcciones)==FALSE);
-
-    // tests de validarLinea
-    initPartida(&partida);
-    partida.jugadorBlanco = "Santiago";
-    partida.jugadorNegro = "Pepe";
-    partida.colorActual = 'B';
-
-    traducirJugada("C5", jugada);
-    assert(validarLinea(&partida, jugada, 0, 1)==TRUE);
-    assert(validarLinea(&partida, jugada, -1, 1)==FALSE);
-
-    // tests de casillaEnRango
-    traducirJugada("A8", jugada);
-    assert(casillaEnRango(jugada)==TRUE);
-    // por como funciona el programa, solo se toman 2 caracteres
-    // del archivo por linea y tira un error de formato si hay mas,
-    // por lo que traducirJugada solo toma los primeros 2 caracteres del string
-    // y por lo tanto "A10"="A1", que está en el tablero.
-    traducirJugada("A10", jugada);
-    assert(casillaEnRango(jugada)==TRUE);
-    traducirJugada("PA", jugada);
-    assert(casillaEnRango(jugada)==FALSE);
-    traducirJugada("66", jugada);
-    assert(casillaEnRango(jugada)==FALSE);
-
-    // tests de movimientoDisponible
-    initPartida(&partida);
-    partida.colorActual = 'B';
-    assert(movimientoDisponible(&partida)==TRUE);
-
-    initPartida(&partida);
-    procesarArchivo("../recursos/terminada.txt", &partida);
-    analizarJugadas(&partida, "./tablero.txt");
-    assert(movimientoDisponible(&partida)==FALSE);
-    liberarPartida(&partida);
-
-    return 0;
 }
 
 // -------------------------------------------------------
