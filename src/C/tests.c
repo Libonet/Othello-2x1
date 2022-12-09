@@ -110,8 +110,8 @@ void test_validarLinea(){
     partida.colorActual = 'B';
 
     traducirJugada("C5", jugada);
-    assert(validarLinea(&partida, jugada, 0, 1)==TRUE);
-    assert(validarLinea(&partida, jugada, -1, 1)==FALSE);
+    assert(validarLinea(&partida, jugada, 1, 0)==1);
+    assert(validarLinea(&partida, jugada, 1, -1)==0);
 }
 
 // tests de casillaEnRango

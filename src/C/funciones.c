@@ -1,9 +1,10 @@
 #include "funciones.h"
 
-// recibe un archivo de origen con jugadas que analizar
-// y devuelve 0 si se analizó correctamente, -1 si
-// hubo un error de formateo. si la partida resulta en empate, se
-// imprime el tablero y el color actual en el destino
+/* Analiza una partida de Othello
+    args:
+        origen: path al archivo con jugadas que analizar
+    returns:
+        0 si se analizó correctamente, -1 si hubo un error de formateo. */
 int analizarPartida(char* origen, char* destino){
     info_tablero partida;
 
@@ -22,6 +23,13 @@ int analizarPartida(char* origen, char* destino){
 
 // -------------------------------------------------------
 
+/* Obtiene la información de la partida almacenada en un archivo 
+    args:
+        origen: path a un archivo de partida de othello
+        partida: estructura en la que almaceno la informacion de la partida
+    returns:
+        0 si funcionó correctamente
+        -1 si hubo errores de formato */
 int procesarArchivo(char* origen, info_tablero* partida){
     FILE* fp;
     int formatoValido = TRUE;
@@ -53,6 +61,13 @@ int procesarArchivo(char* origen, info_tablero* partida){
 
 // -------------------------------------------------------
 
+/* Lee una linea del archivo con formato 'nombre,color'
+    args:
+        fp: puntero al archivo previamente abierto
+        partida: estructura en la que almaceno la informacion de la partida
+    returns:
+        TRUE si logró almacenar el nombre
+        FALSE si falló */
 int leerNombre(FILE* fp, info_tablero* partida){
     char fbuffer[100], nombre[100];
     char color=' ', c;
@@ -103,6 +118,13 @@ int leerNombre(FILE* fp, info_tablero* partida){
 
 // -------------------------------------------------------
 
+/* Lee una linea del archivo con formato 'color'
+    args:
+        fp: puntero al archivo previamente abierto
+        partida: estructura en la que almaceno la informacion de la partida
+    returns:
+        TRUE si logró almacenar el color
+        FALSE si falló */
 int colorInicial(FILE* fp, info_tablero* partida){
     char fbuffer[100];
     char c;
@@ -123,6 +145,14 @@ int colorInicial(FILE* fp, info_tablero* partida){
 
 // -------------------------------------------------------
 
+/* lee desde el puntero fp hasta el final del archivo
+    jugadas de la forma 'columna-fila' o ' '
+    args:
+        fp: puntero al archivo previamente abierto
+        partida: estructura en la que almaceno la informacion de la partida
+    returns:
+        TRUE si logró almacenar las jugadas
+        FALSE si falló */
 int obtenerJugadas(FILE* fp, info_tablero* partida){
     char letra; // buffer[10];
     int terminado=FALSE, error=FALSE;
@@ -153,50 +183,19 @@ int obtenerJugadas(FILE* fp, info_tablero* partida){
         i++;
     }
 
-    // for (int i = 0; !terminado && !error;){
-    //     i = 0;
-    //     if (fgets(buffer, 10, fp)!=NULL){
-    //         if (buffer[0]==' ' || buffer[0]=='\n' || buffer[0]=='\r'){
-    //             partida->jugadas[partida->cant_jugadas++][0]='\0';
-    //             continue;
-    //         }
-    //         else{
-    //             partida->jugadas[partida->cant_jugadas][i]=buffer[i];
-    //             i++;
-    //         }
-    //         if (buffer[1]!=' ' && buffer[1]!='\n' && buffer[1]!='\r'){
-    //             partida->jugadas[partida->cant_jugadas][i]=buffer[i];
-    //             i++;
-    //         }
-    //         else{
-    //             error=TRUE;
-    //             printf("Error!! formato de jugada invalido\n");
-    //         }
-    //         if(buffer[2]=='\n' || buffer[2]=='\r'){
-    //             partida->jugadas[partida->cant_jugadas++][i]='\0';
-    //             continue;
-    //         }
-    //         else{
-    //             error=TRUE;
-    //             printf("Error!! formato de jugada invalido\n");
-    //         }
-    //     }
-    //     else{
-    //         terminado=TRUE;
-    //     }
-    // }
-
-    if (error){
-        return FALSE;
-    }
-    return TRUE;
+    return !error;
 }
 
+/* analiza la lista de jugadas guardadas en la estructura partida
+    args:
+        partida: estructura en la que almaceno la informacion de la partida
+        destino: path al archivo en el que se imprime el tablero si la partida está incompleta */
 void analizarJugadas(info_tablero* partida, char* destino){
     int terminado=FALSE, direcciones[8], jugada_valida=0, jugada[2], previoSaltoDeTurno=FALSE;
-    // cada posicion en direcciones determina si cierta
-    // direccion debe ser modificada con un 1
-    // direcciones[0] = (-1, -1) = NorOeste; direcciones[5] = (1, -1) = SurOeste
+    // cada posicion en direcciones determina la cantidad
+    // de fichas que se modificarían en cierta direccion
+    // la direccion se determina por la posición en 'direcciones'
+    // 0 = (-1, -1) = NorOeste; 5 = (-1, 1) = SurOeste
 
     for(int i=0; i<partida->cant_jugadas && !terminado; i++){
         if (partida->jugadas[i][0]!='\0'){ // no trata de saltar el turno
@@ -249,6 +248,15 @@ void analizarJugadas(info_tablero* partida, char* destino){
 
 // -------------------------------------------------------
 
+/* analiza si una jugada es valida
+    args:
+        partida: estructura en la que almaceno la informacion de la partida
+        jugada: lista de 2 posiciones con el (x, y) de la jugada
+        direcciones: lista de 8 posiciones, cada una determina
+            una direccion específica, y se guarda 
+            cuántos cambios hay en esa dirección
+    returns:
+        jugada_valida: 'booleano' verdadero o falso dependiendo de la validez de la jugada */
 int validarJugada(info_tablero* partida, int* jugada, int* direcciones){
     int direccion=0, jugada_valida=FALSE, cant_de_cambios=FALSE, adyacente[2];
     char color_adyacente;
@@ -257,7 +265,7 @@ int validarJugada(info_tablero* partida, int* jugada, int* direcciones){
         // printf("Error!! la jugada no esta en el tablero\n");
         return FALSE;
     }
-    if (partida->tablero[jugada[0]][jugada[1]]!='X'){
+    if (partida->tablero[jugada[1]][jugada[0]]!='X'){
         // printf("Error!! la casilla no esta vacia\n");
         return FALSE;
     }
@@ -274,7 +282,7 @@ int validarJugada(info_tablero* partida, int* jugada, int* direcciones){
                 continue;
             }
 
-            color_adyacente = partida->tablero[adyacente[0]][adyacente[1]];
+            color_adyacente = partida->tablero[adyacente[1]][adyacente[0]];
             if (color_adyacente=='X' || color_adyacente==partida->colorActual){
                 direcciones[direccion] = 0; // no vamos a considerar esta direccion
                 direccion++;
@@ -292,26 +300,33 @@ int validarJugada(info_tablero* partida, int* jugada, int* direcciones){
     }
     if (!jugada_valida){
         // printf("Error!! no hay fichas del adversario adyacentes\n");
-        return FALSE;
     }
-    return TRUE;
+    return jugada_valida;
 }
 
 // -------------------------------------------------------
 
+/* valida si al recorrer el tablero en cierta dirección se logra una jugada valida
+    args:
+        partida: estructura en la que almaceno la informacion de la partida
+        jugada: lista de 2 posiciones con el (x, y) de la jugada
+        direccion_x: el modificador del x que determina la direccion (-1, 0, 1)
+        direccion_y: el modificador del y que determina la direccion (-1, 0, 1)
+    returns:
+        cant_de_cambios: cantidad de casillas modificadas en la direccion validada */
 int validarLinea(info_tablero* partida, int* jugada, int direccion_x, int direccion_y){
     int adyacente[2];
     int cant_de_cambios=0, terminado=FALSE;
     char color_adyacente;
 
-    adyacente[0] = jugada[0];
     adyacente[1] = jugada[1];
+    adyacente[0] = jugada[0];
     while(!terminado){
         adyacente[0] += direccion_x;
         adyacente[1] += direccion_y;
         if (!casillaEnRango(adyacente)) return 0;
 
-        color_adyacente = partida->tablero[adyacente[0]][adyacente[1]];
+        color_adyacente = partida->tablero[adyacente[1]][adyacente[0]];
         if(color_adyacente==partida->colorActual){
             terminado=TRUE;
             continue;
@@ -329,19 +344,26 @@ int validarLinea(info_tablero* partida, int* jugada, int direccion_x, int direcc
 
 // -------------------------------------------------------
 
+/* modifica el tablero en la casilla indicada por jugada
+    args:
+        partida: estructura en la que almaceno la informacion de la partida
+        jugada: lista de 2 posiciones con el (x, y) de la jugada
+        direcciones: lista de 8 posiciones, cada una determina
+            una direccion específica, y se guarda 
+            cuántos cambios hay en esa dirección */
 void realizarJugada(info_tablero* partida, int* jugada, int* direcciones){
     int direccion = 0, pos_adyacente[2];
     pos_adyacente[0] = jugada[0];
     pos_adyacente[1] = jugada[1];
 
-    partida->tablero[jugada[0]][jugada[1]] = partida->colorActual;
+    partida->tablero[jugada[1]][jugada[0]] = partida->colorActual;
     for (int vecY = -1; vecY < 2; vecY++){
         for (int vecX = -1; vecX < 2; vecX++){
             if (vecX==0 && vecY==0) continue;
             for (int cambios = 0; cambios < direcciones[direccion]; cambios++){
                 pos_adyacente[0] += vecX;
                 pos_adyacente[1] += vecY;
-                partida->tablero[pos_adyacente[0]][pos_adyacente[1]] = partida->colorActual;
+                partida->tablero[pos_adyacente[1]][pos_adyacente[0]] = partida->colorActual;
             }
             pos_adyacente[0] = jugada[0];
             pos_adyacente[1] = jugada[1];
@@ -353,6 +375,11 @@ void realizarJugada(info_tablero* partida, int* jugada, int* direcciones){
 
 // -------------------------------------------------------
 
+/* valida si una casilla se encuentra en el tablero
+    args:
+        jugada: lista de 2 posiciones con el (x, y) de la jugada
+    returns:
+        TRUE o FALSE dependiendo de la validez */
 int casillaEnRango(int* jugada){
     if (jugada[0]>7 || jugada[0]<0 || jugada[1]>7 || jugada[1]<0){
         return FALSE;
@@ -362,21 +389,30 @@ int casillaEnRango(int* jugada){
 
 // -------------------------------------------------------
 
+/* traduce una jugada en formato 'Columna-Fila' al formato '(x, y)'
+    args:
+        jugada: texto en formato 'Columna-Fila'
+        jugadaTraducida: lista de 2 posiciones con el (x, y) de la jugada */
 void traducirJugada(char* jugada, int* jugadaTraducida){
-    jugadaTraducida[1] = (int)(toupper(jugada[0]))-'A';
-    jugadaTraducida[0] = (int)((jugada[1])-'0')-1;
+    jugadaTraducida[0] = (int)(toupper(jugada[0]))-'A';
+    jugadaTraducida[1] = (int)((jugada[1])-'0')-1;
 }
 
 // -------------------------------------------------------
 
+/* determina si hay al menos 1 movimiento disponible
+    args:
+        partida: estructura en la que almaceno la informacion de la partida
+    returns:
+        jugada_valida: TRUE o FALSE dependiendo de si hay o no movimientos disponibles */
 int movimientoDisponible(info_tablero* partida){
     int jugada[2], jugada_valida=FALSE, direcciones[8];
 
     for(int fila=0; fila<CANT_FILAS && !jugada_valida; fila++){
         for(int columna=0; columna<CANT_COLUMNAS && !jugada_valida; columna++){
             if (partida->tablero[fila][columna]=='X'){
-                jugada[0] = fila;
-                jugada[1] = columna;
+                jugada[0] = columna;
+                jugada[1] = fila;
                 jugada_valida = validarJugada(partida, jugada, direcciones);
             }
         }
@@ -387,6 +423,9 @@ int movimientoDisponible(info_tablero* partida){
 
 // -------------------------------------------------------
 
+/* imprime el tablero en pantalla
+    args:
+        partida: estructura en la que almaceno la informacion de la partida */
 void mostrarTablero(info_tablero* partida){
     printf("    A | B | C | D | E | F | G | H |\n");
     for(int fila=0; fila<CANT_FILAS; fila++){
@@ -406,6 +445,10 @@ void mostrarTablero(info_tablero* partida){
 
 // -------------------------------------------------------
 
+/* imprime la partida en un archivo
+    args:
+        partida: estructura en la que almaceno la informacion de la partida
+        destino: path al archivo */
 void exportarPartida(info_tablero* partida, char* destino){
     FILE* fp;
     fp = fopen(destino, "w");
@@ -423,6 +466,9 @@ void exportarPartida(info_tablero* partida, char* destino){
 
 // -------------------------------------------------------
 
+/* determina quién ganó e imprime el resultado
+    args:
+        partida: estructura en la que almaceno la informacion de la partida */
 void indicarGanador(info_tablero* partida){
     int puntos_blancas = 0, puntos_negras = 0;
     char color;
@@ -446,6 +492,9 @@ void indicarGanador(info_tablero* partida){
 
 // -------------------------------------------------------
 
+/* inicializa algunas variables de la estructura partida
+    args:
+        partida: estructura en la que almaceno la informacion de la partida*/
 void initPartida(info_tablero* partida){
     int centroF, centroC;
     for(int fila=0; fila<CANT_FILAS; fila++){
@@ -469,6 +518,9 @@ void initPartida(info_tablero* partida){
 
 // -------------------------------------------------------
 
+/* libera la memoria pedida cuando se lee el archivo con la partida
+    args:
+        partida: estructura en la que almaceno la informacion de la partida*/
 void liberarPartida(info_tablero* partida){
     free(partida->jugadorBlanco);
     free(partida->jugadorNegro);
