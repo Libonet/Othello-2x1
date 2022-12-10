@@ -2,7 +2,17 @@ from ..main import *
 
 # lo testeo primero porque limpia la consola
 def test_turno_maquina():
-    tablero, color = importar_partida("../C/tablero_ejemplo.txt")
+    tablero, color = (
+        [['N', 'X', 'X', 'X', 'X', 'X', 'X', 'X'],
+         ['X', 'N', 'N', 'X', 'X', 'X', 'X', 'X'],
+         ['X', 'X', 'N', 'X', 'X', 'X', 'X', 'X'],
+         ['X', 'X', 'N', 'N', 'N', 'N', 'N', 'X'],
+         ['X', 'X', 'X', 'N', 'N', 'B', 'X', 'X'],
+         ['X', 'X', 'X', 'X', 'X', 'N', 'X', 'X'],
+         ['X', 'X', 'X', 'X', 'X', 'B', 'N', 'X'],
+         ['X', 'X', 'X', 'X', 'X', 'X', 'X', 'X']],
+         "B"
+    )
     frontera_blanca = obtener_frontera(tablero, "B")
     frontera_negra = obtener_frontera(tablero, "N")
     fronteras = (frontera_blanca, frontera_negra)
@@ -29,7 +39,17 @@ def test_importar_partida():
     )
 
 def test_obtener_frontera():
-    tablero, color = importar_partida("../C/tablero_ejemplo.txt")
+    tablero, color = (
+        [['N', 'X', 'X', 'X', 'X', 'X', 'X', 'X'],
+         ['X', 'N', 'N', 'X', 'X', 'X', 'X', 'X'],
+         ['X', 'X', 'N', 'X', 'X', 'X', 'X', 'X'],
+         ['X', 'X', 'N', 'N', 'N', 'N', 'N', 'X'],
+         ['X', 'X', 'X', 'N', 'N', 'B', 'X', 'X'],
+         ['X', 'X', 'X', 'X', 'X', 'N', 'X', 'X'],
+         ['X', 'X', 'X', 'X', 'X', 'B', 'N', 'X'],
+         ['X', 'X', 'X', 'X', 'X', 'X', 'X', 'X']],
+         "B"
+    )
     assert obtener_frontera(tablero, "N")=={
         (3, 1), (4, 6), (5, 7), (0, 2), (1, 0), (2, 5), (1, 3), (7, 4),
         (6, 2), (7, 7), (6, 5), (4, 2), (3, 0), (4, 5), (0, 1), (2, 4),
@@ -40,7 +60,17 @@ def test_obtener_frontera():
     }
 
 def test_buscar_jugadas():
-    tablero, color = importar_partida("../C/tablero_ejemplo.txt")
+    tablero, color = (
+        [['N', 'X', 'X', 'X', 'X', 'X', 'X', 'X'],
+         ['X', 'N', 'N', 'X', 'X', 'X', 'X', 'X'],
+         ['X', 'X', 'N', 'X', 'X', 'X', 'X', 'X'],
+         ['X', 'X', 'N', 'N', 'N', 'N', 'N', 'X'],
+         ['X', 'X', 'X', 'N', 'N', 'B', 'X', 'X'],
+         ['X', 'X', 'X', 'X', 'X', 'N', 'X', 'X'],
+         ['X', 'X', 'X', 'X', 'X', 'B', 'N', 'X'],
+         ['X', 'X', 'X', 'X', 'X', 'X', 'X', 'X']],
+         "B"
+    )
     frontera_blanca = obtener_frontera(tablero, "B")
     frontera_negra = obtener_frontera(tablero, "N")
     fronteras = (frontera_blanca, frontera_negra)
@@ -52,14 +82,34 @@ def test_buscar_jugadas():
         ((7, 2), [0, 0, 0, 0, 0, 1, 0, 0])]
 
 def test_jugada_valida():
-    tablero, color = importar_partida("../C/tablero_ejemplo.txt")
+    tablero, color = (
+        [['N', 'X', 'X', 'X', 'X', 'X', 'X', 'X'],
+         ['X', 'N', 'N', 'X', 'X', 'X', 'X', 'X'],
+         ['X', 'X', 'N', 'X', 'X', 'X', 'X', 'X'],
+         ['X', 'X', 'N', 'N', 'N', 'N', 'N', 'X'],
+         ['X', 'X', 'X', 'N', 'N', 'B', 'X', 'X'],
+         ['X', 'X', 'X', 'X', 'X', 'N', 'X', 'X'],
+         ['X', 'X', 'X', 'X', 'X', 'B', 'N', 'X'],
+         ['X', 'X', 'X', 'X', 'X', 'X', 'X', 'X']],
+         "B"
+    )
 
     assert jugada_valida(tablero, color, (2, 4))==(True, [0, 0, 0, 0, 2, 0, 0, 0])
     assert jugada_valida(tablero, color, (0, 0))==(False, [0, 0, 0, 0, 0, 0, 0, 0])
     assert jugada_valida(tablero, color, (3, 2))==(True, [0, 0, 0, 0, 0, 0, 0, 1])
 
 def test_direccion_valida():
-    tablero, color = importar_partida("../C/tablero_ejemplo.txt")
+    tablero, color = (
+        [['N', 'X', 'X', 'X', 'X', 'X', 'X', 'X'],
+         ['X', 'N', 'N', 'X', 'X', 'X', 'X', 'X'],
+         ['X', 'X', 'N', 'X', 'X', 'X', 'X', 'X'],
+         ['X', 'X', 'N', 'N', 'N', 'N', 'N', 'X'],
+         ['X', 'X', 'X', 'N', 'N', 'B', 'X', 'X'],
+         ['X', 'X', 'X', 'X', 'X', 'N', 'X', 'X'],
+         ['X', 'X', 'X', 'X', 'X', 'B', 'N', 'X'],
+         ['X', 'X', 'X', 'X', 'X', 'X', 'X', 'X']],
+         "B"
+    )
     
     assert direccion_valida(tablero, color, (2, 4), (1, 0))==2
     assert direccion_valida(tablero, color, (2, 4), (-1, -1))==0

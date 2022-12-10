@@ -85,6 +85,8 @@ def comenzar_partida(tablero: list[list[str]], color_actual: str, color_de_jugad
         else:
             print("Turno de maquina:")
             saltar_turno = turno_maquina(tablero, color_actual, nivel, jugadas_validas, casillas_validas, fronteras)
+            input("Presione enter para continuar")
+
         
         if saltar_turno:
             if turno_previo_saltado:
@@ -331,7 +333,6 @@ def turno_maquina(tablero: list[list[str]], color: str, nivel: str, jugadas_vali
 
     print(f"jugada de la maquina: {traducir_jugada_inversa(jugada)}")
     realizar_jugada(tablero, color, jugada, direcciones, fronteras)
-    input("Presione enter para continuar")
 
     return False
 
