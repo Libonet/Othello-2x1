@@ -262,11 +262,11 @@ int validarJugada(info_tablero* partida, int* jugada, int* direcciones){
     char color_adyacente;
 
     if (!casillaEnRango(jugada)){
-        // printf("Error!! la jugada no esta en el tablero\n");
+        printf("Error!! la jugada no esta en el tablero\n");
         return FALSE;
     }
     if (partida->tablero[jugada[1]][jugada[0]]!='X'){
-        // printf("Error!! la casilla no esta vacia\n");
+        printf("Error!! la casilla no esta vacia\n");
         return FALSE;
     }
     // recorro todas las direcciones
@@ -299,7 +299,7 @@ int validarJugada(info_tablero* partida, int* jugada, int* direcciones){
         }
     }
     if (!jugada_valida){
-        // printf("Error!! no hay fichas del adversario adyacentes\n");
+        printf("Error!! no hay fichas del adversario adyacentes\n");
     }
     return jugada_valida;
 }
@@ -418,6 +418,7 @@ int movimientoDisponible(info_tablero* partida){
         }
     }
 
+    printf("\033[H\033[J");
     return jugada_valida;
 }
 

@@ -2,8 +2,6 @@ Alejandro,B
 Federico,N
 N
 D3
-G4
-F5
-M6
+C5
+C6
 
-J0
