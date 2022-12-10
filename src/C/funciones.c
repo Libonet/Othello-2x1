@@ -220,10 +220,10 @@ void analizarJugadas(info_tablero* partida, char* destino){
         if(!jugada_valida){
             terminado=TRUE;
             if (partida->colorActual=='B'){
-                printf("El jugador %s realizo una jugada invalida\n", partida->jugadorBlanco);
+                printf("El jugador %s realizo una jugada invalida (%s)\n", partida->jugadorBlanco, partida->jugadas[i]);
             }
             else{
-                printf("El jugador %s realizo una jugada invalida\n", partida->jugadorNegro);
+                printf("El jugador %s realizo una jugada invalida (%s)\n", partida->jugadorNegro, partida->jugadas[i]);
             }
             mostrarTablero(partida);
         }
