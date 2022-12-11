@@ -20,6 +20,8 @@ def jugar_Othello(origen: str, color: str, nivel: str):
         nivel: dificultad de la maquina"""
 
     tablero, color_actual = importar_partida(origen)
+    if color_actual=="":
+        return
     if not (color=="B" or color=="N") or not (color_actual=="B" or color_actual=="N"):
         print("Error!! colores invalidos")
         return
