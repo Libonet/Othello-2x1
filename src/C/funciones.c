@@ -93,7 +93,7 @@ int leerNombre(FILE* fp, info_tablero* partida){
             return FALSE;
         }
         if (color=='B' && partida->jugadorBlanco==NULL && (fbuffer[j]==' ' || fbuffer[j]=='\n' || fbuffer[j]=='\r')){
-            partida->jugadorBlanco = malloc(sizeof(char)*size_nombre);
+            partida->jugadorBlanco = malloc(sizeof(char)*size_nombre+1);
             if (partida->jugadorBlanco==NULL){
                 return FALSE;
             }
@@ -101,7 +101,7 @@ int leerNombre(FILE* fp, info_tablero* partida){
             return TRUE;
         }
         if(color=='N' && partida->jugadorNegro==NULL && (fbuffer[j]==' ' || fbuffer[j]=='\n' || fbuffer[j]=='\r')){
-            partida->jugadorNegro = malloc(sizeof(char)*size_nombre);
+            partida->jugadorNegro = malloc(sizeof(char)*size_nombre+1);
             if (partida->jugadorNegro==NULL){
                 return FALSE;
             }
@@ -414,11 +414,11 @@ int movimientoDisponible(info_tablero* partida){
                 jugada[0] = columna;
                 jugada[1] = fila;
                 jugada_valida = validarJugada(partida, jugada, direcciones);
+                printf("\033[H\033[J");
             }
         }
     }
 
-    printf("\033[H\033[J");
     return jugada_valida;
 }
 
